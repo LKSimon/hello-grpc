@@ -1,0 +1,49 @@
+--go_out详细解读
+想必大家在使用的时候，应该遇到过这些写法：--go_out=paths=import:.、--go_out=paths=source_relative:.，或者--go_out=plugins=grpc:.
+
+--go_out=paths=import:. 
+    生成的pb.go文件按照 proto文件中import的路径存放，该方式为默认方式
+
+--go_out=paths=source_relative:.
+    生成的pb.go文件按照proto文件所在的路径存放
+    eg:  protoc --proto_path=. --go_out=paths=source_relative:. cs/cs.proto 
+
+
+
+grpc-demo/
+├── cs
+│   ├── cs.pb.go
+│   └── cs.proto
+├── go.mod
+├── go.sum
+└── ss
+    └── ss.proto
+
+cs.proto文件内容：
+    syntax = "proto3";
+    package cs;
+    option go_package="grpc-demo/cs";
+
+    message Test{
+    optional string name = 1;
+    }
+
+ss.proto
+    syntax = "proto3";
+
+    package ss;
+
+    import "cs/cs.proto";
+
+    option go_package="grpc-demo/ss";
+
+    message Test2{
+    optional cs.Test cstest = 1;
+    }
+
+由于ss.proto引入了cs的proto文件，故需要执行protoc 时指定cs.proto
+eg：
+    在grpc-demo目录下执行  protoc --proto_path=. --go_out=paths=source_relative:. cs/cs.proto ss/ss.proto
+    或者在cs.proto已经执行protoc编译的情况下只执行protoc --proto_path=. --go_out=paths=source_relative:.  ss/ss.proto
+
+
